@@ -9,7 +9,7 @@ train = pd.read_csv("train.csv")
 test = pd.read_csv("test.csv")
 
 all_data = pd.concat((train.loc[:,'MSSubClass':'SaleCondition'],test.loc[:,'MSSubClass':'SaleCondition']), ignore_index=True)
-price_data = np.log1p(train['SalePrice'])
+price_data = (train['SalePrice'])
 for col in all_data:
 	if all_data[col].dtype==object:
 		# max_occur = max(all_data[col])
@@ -33,9 +33,9 @@ for col in all_data:
 train_data = all_data[0:1460]
 test_data = all_data[1460:]
 print "Id,SalePrice"
-neigh = KNeighborsRegressor(n_neighbors=6)
+neigh = KNeighborsRegressor(n_neighbors=5)
 neigh.fit(train_data, price_data) 
 a=neigh.predict(test_data)
 for i in range(len(a)):
 	temp = a[i:i+1]
-	print "%d,%f" %(i+1461,np.expm1(temp))
+	print "%d,%f" %(i+1461,(temp))
