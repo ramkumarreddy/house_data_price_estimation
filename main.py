@@ -22,10 +22,18 @@ for col in all_data:
 cat_columns = all_data.select_dtypes(['category']).columns
 all_data[cat_columns] = all_data[cat_columns].apply(lambda x: x.cat.codes)
 all_data = (all_data - all_data.mean()) / (all_data.max() - all_data.min())
+corr_data = all_data[0:1460]
+corr_array = []
+for col in corr_data:
+	corr_array.append(corr_data[col].corr(price_data))
+i=0
+for col in all_data:
+	all_data[col] = all_data[col]*corr_array[i]
+	i+=1
 train_data = all_data[0:1460]
 test_data = all_data[1460:]
 print "Id,SalePrice"
-neigh = KNeighborsRegressor(n_neighbors=14)
+neigh = KNeighborsRegressor(n_neighbors=6)
 neigh.fit(train_data, price_data) 
 a=neigh.predict(test_data)
 for i in range(len(a)):
