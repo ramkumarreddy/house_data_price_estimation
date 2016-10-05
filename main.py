@@ -1,19 +1,24 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.linear_model import Lasso
-from sklearn.neighbors import KDTree, KNeighborsRegressor
+from sklearn.neighbors import KDTree
+from sklearn.cluster import KMeans
 from math import e
+from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
+from sklearn import linear_model
+from sklearn.cross_validation import cross_val_score
 
 train = pd.read_csv("train.csv")
 test = pd.read_csv("test.csv")
-
+obj_array = ["MSZoning","Utilities","Exterior1st","Exterior2nd","MasVnrType","Electrical","KitchenQual","Functional","SaleType"]
 all_data = pd.concat((train.loc[:,'MSSubClass':'SaleCondition'],test.loc[:,'MSSubClass':'SaleCondition']), ignore_index=True)
 price_data = (train['SalePrice'])
 for col in all_data:
 	if all_data[col].dtype==object:
-		# max_occur = max(all_data[col])
-		# all_data[col] = all_data[col].fillna(max_occur)
+		df1 = all_data[col].value_counts()
+		max_occur = df1.index[0]
+		all_data[col] = all_data[col].fillna(max_occur)
 		all_data[col] = all_data[col].astype('category')
 	else:
 		mean_value = all_data[col].mean()
@@ -30,12 +35,31 @@ i=0
 for col in all_data:
 	all_data[col] = all_data[col]*corr_array[i]
 	i+=1
+
+reg = linear_model.Ridge (alpha = .5)
 train_data = all_data[0:1460]
 test_data = all_data[1460:]
+kmeans = KMeans(n_clusters=10, random_state=0).fit(train_data)
+temparray = kmeans.predict(train_data)
+
+clf = RandomForestClassifier(random_state=0,n_estimators=50)
 print "Id,SalePrice"
-neigh = KNeighborsRegressor(n_neighbors=5)
-neigh.fit(train_data, price_data) 
-a=neigh.predict(test_data)
-for i in range(len(a)):
-	temp = a[i:i+1]
-	print "%d,%f" %(i+1461,(temp))
+for i in range(1460,2919):
+	cur_data = train_data
+	cur_data = cur_data.append(all_data[i:i+1])
+	temparray = kmeans.predict(cur_data)
+	value = temparray[-1]
+	temparray = temparray[:-1]
+	tempotrain = train_data[0:1]
+	tempoprice = price_data[0:1]
+	for j in range(len(temparray)):
+		if value==temparray[j]:
+			tempotrain = pd.concat([tempotrain, train_data[j:j+1]])
+			tempoprice = pd.concat([tempoprice, price_data[j:j+1]])
+	tempotrain = tempotrain[1:]
+	tempoprice = tempoprice[1:]
+	# clf.fit(tempotrain, tempoprice)
+	reg.fit(tempotrain,tempoprice)
+	a = reg.predict(all_data[i:i+1])
+	print "%d,%f" %(i+1,a[0])
+	# print a
