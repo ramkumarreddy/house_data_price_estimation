@@ -13,7 +13,8 @@ train = pd.read_csv("train.csv")
 test = pd.read_csv("test.csv")
 
 o=[30, 462, 523, 632, 968, 970, 1298, 1324]
-obj_array = ["MSZoning","Utilities","Exterior1st","Exterior2nd","MasVnrType","Electrical","KitchenQual","Functional","SaleType"]
+ob_array = ["MSZoning","Utilities","Exterior1st","Exterior2nd","MasVnrType","Electrical","KitchenQual","Functional","SaleType"]
+obj_array = ["SaleType"]
 all_data = pd.concat((train.loc[:,'MSSubClass':'SaleCondition'],test.loc[:,'MSSubClass':'SaleCondition']), ignore_index=True)
 price_data = (train['SalePrice'])
 
@@ -22,6 +23,9 @@ price_data = price_data.drop(o,axis=0)
 
 for col in all_data:
 	if all_data[col].dtype==object:
+		if col not in obj_array:
+			all_data[col] = all_data[col].astype('category')
+			continue
 		df1 = all_data[col].value_counts()
 		max_occur = df1.index[0]
 		all_data[col] = all_data[col].fillna(max_occur)
@@ -50,6 +54,8 @@ temparray = kmeans.predict(train_data)
 
 clf = RandomForestClassifier(random_state=0,n_estimators=50)
 print "Id,SalePrice"
+clf = linear_model.Lasso(alpha=0.1)
+
 for i in range(1452,2911):
 	cur_data = train_data
 	cur_data = cur_data.append(all_data[i:i+1])
@@ -67,5 +73,6 @@ for i in range(1452,2911):
 	# clf.fit(tempotrain, tempoprice)
 	reg.fit(tempotrain,tempoprice)
 	a = reg.predict(all_data[i:i+1])
+	# a = clf.predict(all_data[i:i+1])
 	print "%d,%f" %(i+9,a[0])
 	# print a
