@@ -45,11 +45,11 @@ i=0
 for col in all_data:
 	all_data[col] = all_data[col]*corr_array[i]
 	i+=1
-
+all_data['YearBuilt'] = 2*all_data['YearBuilt']
 reg = linear_model.Ridge (alpha = .5)
 train_data = all_data[0:1452]
 test_data = all_data[1452:]
-kmeans = KMeans(n_clusters=10, random_state=0).fit(train_data)
+kmeans = KMeans(n_clusters=5, random_state=0).fit(train_data)
 temparray = kmeans.predict(train_data)
 
 clf = RandomForestClassifier(random_state=0,n_estimators=50)
@@ -75,4 +75,3 @@ for i in range(1452,2911):
 	a = reg.predict(all_data[i:i+1])
 	# a = clf.predict(all_data[i:i+1])
 	print "%d,%f" %(i+9,a[0])
-	# print a
