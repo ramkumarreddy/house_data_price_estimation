@@ -8,6 +8,8 @@ from math import e
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier
 from sklearn import linear_model
 from sklearn.cross_validation import cross_val_score
+from scipy.stats import skew
+
 
 train = pd.read_csv("train.csv")
 test = pd.read_csv("test.csv")
@@ -34,6 +36,12 @@ for col in all_data:
 		mean_value = all_data[col].mean()
 		all_data[col] = all_data[col].fillna(mean_value)
 
+# numeric_feats = all_data.dtypes[all_data.dtypes != "category"].index
+# skewed_feats = train[numeric_feats].apply(lambda x: skew(x.dropna())) #compute skewness
+# skewed_feats = skewed_feats[skewed_feats > 0.75]
+# skewed_feats = skewed_feats.index
+
+# all_data[skewed_feats] = np.log1p(all_data[skewed_feats])
 cat_columns = all_data.select_dtypes(['category']).columns
 all_data[cat_columns] = all_data[cat_columns].apply(lambda x: x.cat.codes)
 all_data = (all_data - all_data.mean()) / (all_data.max() - all_data.min())
@@ -45,7 +53,9 @@ i=0
 for col in all_data:
 	all_data[col] = all_data[col]*corr_array[i]
 	i+=1
+
 all_data['YearBuilt'] = 2*all_data['YearBuilt']
+all_data['MSZoning'] = 2*all_data['MSZoning']
 reg = linear_model.Ridge (alpha = .5)
 train_data = all_data[0:1452]
 test_data = all_data[1452:]
@@ -70,8 +80,9 @@ for i in range(1452,2911):
 			tempoprice = pd.concat([tempoprice, price_data[j:j+1]])
 	tempotrain = tempotrain[1:]
 	tempoprice = tempoprice[1:]
-	# clf.fit(tempotrain, tempoprice)
+	clf.fit(tempotrain, tempoprice)
 	reg.fit(tempotrain,tempoprice)
 	a = reg.predict(all_data[i:i+1])
-	# a = clf.predict(all_data[i:i+1])
-	print "%d,%f" %(i+9,a[0])
+	b = clf.predict(all_data[i:i+1])
+	print "%d,%f" %(i+9,(a[0]+b)/2)
+	# print a
